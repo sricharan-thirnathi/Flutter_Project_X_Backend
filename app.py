@@ -15,6 +15,7 @@ def register():
     name = data.get('name')
     email = data.get('email')
     password = data.get('password')
+    device_os = data.get('os')
 
     if not name or not email or not password:
         return jsonify({'error': 'Missing data!'}), 400
@@ -28,7 +29,8 @@ def register():
         user_id = mongo.db.users.insert_one({
             'name': name, 
             'email': email, 
-            'password': hashed_password
+            'password': hashed_password,
+            'device_os': device_os
         }).inserted_id
 
         return jsonify({'message': 'User registered successfully!'}), 201

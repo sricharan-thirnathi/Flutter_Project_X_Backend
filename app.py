@@ -77,5 +77,35 @@ def protected():
 
     return jsonify({'message': 'This is a protected route.', 'user_id': user_id})
 
+
+@app.route('/dashboard', methods=['GET'])
+def get_devices():
+    token = request.headers.get('Authorization')
+
+    if not token:
+        return jsonify({'error': 'Token is missing!'}), 401
+
+    try:
+        token = token.split()[1]
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        user_id = data['user_id']
+    except jwt.ExpiredSignatureError:
+        return jsonify({'error': 'Token has expired!'}), 401
+    except (jwt.InvalidTokenError, IndexError, KeyError):
+        return jsonify({'error': 'Invalid token!'}), 401
+
+    # Fetch devices from MongoDB
+    try:
+        devices = list(mongo.db.devices.find())
+
+        # Convert ObjectId to string for JSON serialization
+        for device in devices:
+            device['_id'] = str(device['_id'])
+
+        return jsonify({'devices': devices})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
